@@ -1,0 +1,1689 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>惦 · Mind — 视觉原型</title>
+<style>
+/* ============ tokens ============ */
+:root{
+  --bg:#FFF8F5;
+  --bg-2:#FFF3ED;
+  --surface:#FFFFFF;
+  --ink:#1C1C1E;
+  --ink-2:#6B6B70;
+  --ink-3:#A3A0A0;
+  --primary:#FF6B5B;
+  --primary-2:#FF8FA3;
+  --primary-soft:#FFEDEA;
+  --pending:#FF9500;
+  --done:#34C759;
+  --idle:#8E8E93;
+  --hair:rgba(28,28,30,.075);
+  --shadow-card:0 1px 2px rgba(28,28,30,.04), 0 10px 26px -16px rgba(140,80,60,.34);
+  --shadow-float:0 12px 26px -10px rgba(255,91,74,.62);
+  --r-card:20px;
+  --font:"PingFang SC","HarmonyOS Sans SC","MiSans","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  --serif:"Songti SC","Source Han Serif SC","Noto Serif SC",Georgia,serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{
+  font-family:var(--font);
+  color:var(--ink);
+  background:#F2EBE6;
+  background-image:
+    radial-gradient(90% 60% at 50% -10%, #FFF9F5 0%, rgba(255,249,245,0) 70%),
+    radial-gradient(60% 50% at 100% 0%, #FBE7DF 0%, rgba(251,231,223,0) 60%);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+/* ============ site chrome ============ */
+.topbar{
+  position:sticky;top:0;z-index:60;
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  padding:14px 26px;
+  background:rgba(250,244,240,.82);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(28,28,30,.06);
+}
+.topbar .brand{display:flex;align-items:baseline;gap:9px;margin-right:auto}
+.topbar .brand b{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:.02em}
+.topbar .brand span{font-size:11.5px;letter-spacing:.28em;color:var(--ink-3);text-transform:uppercase}
+.topbar .brand i{font-style:normal;font-size:12.5px;color:var(--ink-2);letter-spacing:.02em;margin-left:4px}
+.tool{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-2)}
+.switch{display:inline-flex;background:#EDE4DE;border-radius:999px;padding:3px}
+.switch button{
+  border:0;background:transparent;font-family:inherit;font-size:12.5px;font-weight:600;
+  color:var(--ink-2);padding:6px 13px;border-radius:999px;cursor:pointer;transition:.22s;
+}
+.switch button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(120,70,50,.16)}
+main{padding:34px 26px 90px}
+.view{display:none}
+.view.on{display:block}
+
+/* ============ single view ============ */
+.stage{display:flex;justify-content:center;align-items:flex-start;gap:56px;flex-wrap:wrap}
+.stage .notes{width:290px;padding-top:26px;color:var(--ink-2);font-size:13px;line-height:1.85}
+.stage .notes h3{font-size:13px;color:var(--ink);margin:0 0 8px;letter-spacing:.04em}
+.stage .notes ol{margin:0 0 22px;padding-left:18px}
+.stage .notes li{margin-bottom:4px}
+.stage .notes kbd{
+  font-family:inherit;font-size:11.5px;background:#fff;border:1px solid var(--hair);
+  border-radius:6px;padding:1px 6px;color:var(--ink-2);
+}
+.device{
+  position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;
+  background:var(--bg);
+  box-shadow:0 0 0 9px #17171A, 0 0 0 10px #3B3B42, 0 44px 80px -28px rgba(90,50,35,.5);
+  flex:0 0 auto;
+}
+.punch{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:11px;height:11px;border-radius:50%;background:#0A0A0C;z-index:40;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.app{position:absolute;inset:0}
+
+/* ============ screen skeleton ============ */
+.screen{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  background:
+    radial-gradient(110% 70% at 50% -8%, #FFFDFB 0%, rgba(255,253,251,0) 58%),
+    linear-gradient(180deg,#FFF8F5 0%, #FFF6F1 62%, #FFF2EC 100%);
+  overflow:hidden;
+}
+.statusbar{
+  flex:0 0 46px;height:46px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 26px;font-size:12.5px;font-weight:600;letter-spacing:.02em;color:var(--ink);
+}
+.statusbar .sb{display:flex;align-items:center;gap:5px;opacity:.85}
+.scroll{flex:1;overflow-y:auto;padding:0 16px 104px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.scroll.flush{padding-left:0;padding-right:0}
+.appbar{display:flex;align-items:flex-end;justify-content:space-between;padding:2px 20px 14px;gap:12px}
+.appbar h1{margin:0;font-size:21px;font-weight:600;letter-spacing:-.01em}
+.appbar .sub{margin:3px 0 0;font-size:11.5px;color:var(--ink-3);letter-spacing:.02em}
+/* 带返回的顶栏：返回贴左，标题真正居中 */
+.appbar.nav{
+  position:relative;align-items:center;justify-content:center;
+  padding:4px 16px 14px;min-height:44px;
+}
+.appbar.nav h1{font-size:17px;font-weight:600;letter-spacing:.01em}
+.appbar.nav .back{
+  position:absolute;left:8px;top:50%;transform:translateY(-50%);
+  padding:8px 10px 8px 6px;margin:0;gap:3px;font-size:13px;color:var(--ink-2);
+}
+.appbar.nav .back svg{opacity:.7;flex:0 0 auto}
+/* 互动次数：点一下才浮出"戳了几次"，三秒后自动收起 */
+.appbar .sub.peekable{cursor:pointer;display:inline-block}
+.appbar .sub.peekable b{font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.peek-more{
+  display:inline-block;max-width:0;opacity:0;overflow:hidden;white-space:nowrap;
+  transition:max-width .32s ease, opacity .32s ease;
+}
+.peek-more.show{max-width:150px;opacity:1}
+.peek-more b{color:var(--primary);font-weight:600}
+.icon-btn{
+  border:0;background:#fff;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+  color:var(--ink-2);box-shadow:var(--shadow-card);cursor:pointer;flex:0 0 36px;
+}
+.ghost-link{
+  border:0;background:transparent;font-family:inherit;font-size:12.5px;color:var(--ink-2);
+  display:inline-flex;align-items:center;gap:2px;cursor:pointer;padding:6px 0;
+}
+.ghost-link svg{opacity:.55}
+
+/* ============ tabbar ============ */
+.tabbar{
+  position:absolute;left:0;right:0;bottom:0;height:80px;display:flex;align-items:flex-start;
+  padding:9px 14px 0;
+  background:rgba(255,249,246,.9);
+  backdrop-filter:blur(20px) saturate(1.2);
+  border-top:1px solid var(--hair);z-index:30;
+}
+.tab{
+  flex:1;border:0;background:transparent;font-family:inherit;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  color:var(--ink-3);font-size:10.5px;font-weight:500;letter-spacing:.04em;padding:2px 0;
+  transition:color .2s;
+}
+.tab.on{color:var(--primary);font-weight:600}
+.tab svg{width:24px;height:24px}
+
+/* ============ 互动流：左右布局，无头像 ============ */
+.msg{display:flex;margin-bottom:11px}
+.msg.in{justify-content:flex-start}
+.msg.out{justify-content:flex-end}
+.msg .bub{
+  position:relative;max-width:78%;border-radius:18px;padding:11px 13px;
+  box-shadow:0 1px 2px rgba(28,28,30,.035), 0 8px 20px -16px rgba(140,80,60,.34);
+  border:1px solid rgba(255,255,255,.7);
+}
+.msg.in .bub{background:#fff;border-top-left-radius:7px}
+.msg.out .bub{background:#FFF0EC;border-top-right-radius:7px;border-color:rgba(255,107,91,.16);max-width:74%}
+.msg .mh{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-3)}
+.msg .mh b{font-weight:600;color:var(--ink-2);font-size:11.5px;letter-spacing:.02em}
+.msg .mh .t{margin-left:auto;font-variant-numeric:tabular-nums}
+.msg .mtext{margin:5px 0 0;font-size:14.5px;line-height:1.55;letter-spacing:.01em}
+.msg .macts{display:flex;gap:7px;margin-top:9px}
+.msg .macts button{flex:1;padding:8px 0;font-size:12.5px;box-shadow:none}
+/* 自己发的卡片：只在还没做时说一句「未读 / 仅读」，与卡片底部对齐；已回应什么都不写 */
+.msg .ostate{
+  flex:none;align-self:flex-end;margin:0 9px 3px 0;white-space:nowrap;
+  font-size:10px;letter-spacing:.04em;color:var(--ink-3);
+}
+.msg .ostate.unread{color:var(--primary);font-weight:600}
+/* 详情弹层里的状态标签：点开卡片才看得到，历史消息也带上 */
+.dstate{
+  display:inline-block;margin-left:7px;padding:1.5px 7px;border-radius:999px;
+  font-size:10px;font-weight:600;letter-spacing:.04em;vertical-align:1px;
+  background:#F1EFED;color:#77777C;
+}
+.dstate.unread{background:#FFEDE8;color:var(--primary)}
+.dstate.done{background:#E7F8EC;color:#2A8C4A}
+/* 有回应内容的卡片：右下折一个书签角，回应内容点开详情才看 */
+.msg .bub.bookmark::after{
+  content:"";position:absolute;right:-1px;bottom:-1px;width:17px;height:17px;
+  border-bottom-right-radius:18px;
+  background:linear-gradient(135deg, rgba(255,255,255,0) 46%, #F0E4DC 47%);
+  box-shadow:inset -1px -1px 0 rgba(28,28,30,.05);
+  pointer-events:none;
+}
+.msg.out .bub.bookmark::after{
+  background:linear-gradient(135deg, rgba(255,255,255,0) 46%, #FFD6C9 47%);
+  box-shadow:inset -1px -1px 0 rgba(255,107,91,.12);
+}
+/* 戳一下：唯一收成细线的一类 */
+.poke-line{padding:7px 12px;gap:6px}
+.poke-line .t{margin-left:auto;font-size:11px}
+.poke-line .pback{
+  border:1px solid rgba(255,107,91,.28);background:#fff;color:var(--primary);
+  font-family:inherit;font-size:11px;font-weight:600;line-height:1;
+  border-radius:999px;padding:5px 10px;margin-left:8px;cursor:pointer;
+}
+.poke-line .pback:active{background:#FFF3F0}
+.act-note{margin:7px 0 0;font-size:10.5px;color:var(--ink-3);line-height:1.5}
+/* 已完成 / 当天没做：收成一行 */
+.done-line{
+  display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-3);
+  padding:9px 13px;border-radius:14px;background:#F6F2EF;max-width:100%;
+}
+.msg.out .done-line{background:#FBF3EF}
+.done-line b{font-weight:600;color:#2A8C4A}
+.done-line.miss b{color:#9A9490;font-weight:500}
+.done-line .t{margin-left:auto;font-size:11px;font-variant-numeric:tabular-nums;opacity:.85}
+/* 有回应内容的完成卡片：可点开看 */
+/* 可点开的卡片：互动气泡 / 惦页行 / 一行式记录 */
+.tap{cursor:pointer}
+.msg .bub.tap{cursor:pointer}
+/* 回应内容块：卡片详情共用 */
+.reply{
+  margin-top:8px;padding:9px 11px;border-radius:12px;
+  background:rgba(255,255,255,.75);border:1px dashed rgba(28,28,30,.12);
+}
+.msg.out .reply{background:#fff;border-color:rgba(255,107,91,.22)}
+.sheet .reply{background:#FBF7F4;border-color:rgba(255,107,91,.18)}
+.reply .say{margin:0;font-size:13px;color:var(--ink-2);line-height:1.5}
+.thumb{
+  margin-top:7px;width:88px;height:66px;border-radius:10px;
+  background:linear-gradient(135deg,#E7F0F7,#DCE9F2);display:grid;place-items:center;font-size:17px;
+}
+/* 详情弹层里的原文 */
+.dcontent{
+  margin-top:10px;font-size:14.5px;line-height:1.55;color:var(--ink);
+  letter-spacing:.01em;
+}
+/* 置顶区 */
+.todo-head{display:flex;align-items:center;gap:8px;padding:2px 2px 9px;font-size:11.5px;color:#A9690A;font-weight:600;letter-spacing:.03em}
+.todo-head .n{background:#FFF0D9;color:#A9690A;border-radius:999px;padding:1px 7px;font-size:11px}
+.sep-title{display:flex;align-items:center;gap:10px;margin:16px 2px 10px;font-size:11.5px;color:var(--ink-3)}
+.sep-title::before,.sep-title::after{content:"";height:1px;background:var(--hair);flex:1}
+.pill{
+  display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;
+  padding:3.5px 9px;border-radius:999px;letter-spacing:.01em;
+}
+.pill.done{background:#E7F8EC;color:#2A8C4A}
+.pill.warn{background:#FFF1DC;color:#A9690A}
+.pill.idle{background:#F1EFED;color:#77777C}
+.meta{font-size:11.5px;color:var(--ink-3)}
+.link{
+  border:0;background:transparent;font-family:inherit;font-size:12px;color:var(--primary);
+  padding:8px 0 0;cursor:pointer;font-weight:600;
+}
+.acts{display:flex;gap:8px;margin-top:10px}
+.btn-primary{
+  border:0;font-family:inherit;font-weight:600;cursor:pointer;
+  background:linear-gradient(135deg,#FF8071,#FF5C4B);color:#fff;
+  border-radius:999px;padding:9px 16px;font-size:13px;letter-spacing:.01em;
+  box-shadow:0 8px 18px -9px rgba(255,91,74,.85);
+  transition:transform .15s, box-shadow .2s;
+}
+.btn-primary:active{transform:scale(.97);box-shadow:0 3px 10px -6px rgba(255,91,74,.8)}
+/* 回应：橙底白字（待行动色） */
+.btn-respond{
+  border:0;font-family:inherit;font-weight:600;cursor:pointer;
+  background:linear-gradient(135deg,#FFB020,#FF9500);color:#fff;
+  border-radius:999px;padding:9px 16px;font-size:13px;letter-spacing:.01em;
+  box-shadow:0 8px 18px -9px rgba(255,149,0,.75);
+  transition:transform .15s, box-shadow .2s;
+}
+.btn-respond:active{transform:scale(.97);box-shadow:0 3px 10px -6px rgba(255,149,0,.7)}
+.btn-ghost{
+  border:1px solid var(--hair);background:#fff;font-family:inherit;font-weight:600;cursor:pointer;
+  color:var(--ink-2);border-radius:999px;padding:9px 16px;font-size:13px;
+}
+.btn-wide{width:100%;padding:14px;font-size:15px;border-radius:16px;margin-top:14px}
+/* Tab 角标：红点，不带数字 */
+.badge,.tab-dot{
+  position:absolute;top:0;right:-1px;width:8px;height:8px;padding:0;
+  border-radius:50%;background:#FF3B30;color:transparent;font-size:0;
+  display:block;line-height:0;font-style:normal;
+  box-shadow:0 0 0 2px rgba(255,249,246,.95);
+}
+.tab .ico{position:relative;display:block}
+.icon-badge{
+  position:relative;width:52px;height:52px;border-radius:15px;display:grid;place-items:center;
+  background:linear-gradient(160deg,#FF8B7B,#FF5B4A);color:#fff;
+  box-shadow:0 8px 18px -10px rgba(255,91,74,.9);
+}
+.icon-badge .nb{
+  position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;
+  background:#FF3B30;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;
+}
+
+/* ============ mind tab ============ */
+.mind-head{display:flex;align-items:center;justify-content:space-between;padding:0 20px 12px}
+.mind-head .l{display:flex;align-items:center;gap:8px}
+.mind-head .mark{width:26px;height:32px;color:var(--primary)}
+.mind-head h1{font-family:var(--serif);font-size:23px;font-weight:600;margin:0;letter-spacing:.06em}
+.seg{position:relative;display:flex;background:#F4E9E3;border-radius:999px;padding:3px;margin:0 16px 6px}
+.seg .pill{
+  position:absolute;top:3px;left:3px;bottom:3px;width:calc(50% - 3px);border-radius:999px;background:#fff;
+  box-shadow:0 1px 4px rgba(140,80,60,.18);transition:transform .3s cubic-bezier(.4,0,.2,1);
+  padding:0;margin:0;
+}
+.seg.to .pill{transform:translateX(100%)}
+.seg button{
+  flex:1;position:relative;z-index:1;border:0;background:transparent;font-family:inherit;
+  padding:9px 0;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer;letter-spacing:.01em;
+  transition:color .25s;
+}
+.seg button.on{color:var(--ink)}
+.seg button b{font-weight:600;opacity:.42;margin-left:4px;font-variant-numeric:tabular-nums}
+.mind-hero{padding:14px 20px 10px;text-align:center}
+.thread-svg{width:236px;height:54px;display:block;margin:0 auto 2px}
+.thread-svg .beat{animation:beat 2.2s ease-in-out infinite;transform-origin:center}
+.hero-line{margin:0;font-size:13px;color:var(--ink-2);letter-spacing:.02em}
+.hero-line b{color:var(--primary);font-size:15px;font-variant-numeric:tabular-nums;margin:0 2px}
+.trow{
+  display:grid;grid-template-columns:34px 1fr;column-gap:11px;
+  background:#fff;border-radius:18px;padding:12px 14px;margin-bottom:9px;
+  box-shadow:var(--shadow-card);border:1px solid rgba(255,255,255,.7);
+}
+.trow.pending{border:1px solid rgba(255,149,0,.5);background:linear-gradient(180deg,#FFFDF8,#FFF9F1)}
+/* 我发出去的：行尾同样只说「未读 / 仅读」，已回应不写 */
+.trow.out{grid-template-columns:34px 1fr auto}
+.tstate{align-self:center;justify-self:end;margin-left:10px;white-space:nowrap;font-size:10px;letter-spacing:.04em;color:var(--ink-3)}
+.tstate.unread{color:var(--primary);font-weight:600}
+/* 有回应内容的行：右下折角，和互动流一致 */
+.trow.bookmark{position:relative}
+.trow.bookmark::after{
+  content:"";position:absolute;right:-1px;bottom:-1px;width:16px;height:16px;
+  border-bottom-right-radius:18px;
+  background:linear-gradient(135deg, rgba(255,255,255,0) 46%, #F0E4DC 47%);
+  box-shadow:inset -1px -1px 0 rgba(28,28,30,.05);
+  pointer-events:none;
+}
+.tile{
+  width:34px;height:34px;border-radius:12px;display:grid;place-items:center;font-size:16px;line-height:1;
+}
+.tile.drink{background:#E8F3FF}
+.tile.stand{background:#E9F7EE}
+.tile.kegel{background:#EFF6E6}
+.tile.custom{background:#FFF1E6}
+.tile.poke{background:#FFEDF1}
+.tiny{margin:4px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.newdot{width:6px;height:6px;border-radius:50%;background:var(--primary);display:inline-block;margin-left:5px;vertical-align:1px}
+.empty{padding:26px 30px 0;text-align:center}
+.empty .e-title{margin:4px 0 0;font-size:14px;color:var(--ink-2)}
+.empty .e-sub{margin:6px 0 16px;font-size:12px;color:var(--ink-3);line-height:1.6}
+.fab{
+  position:absolute;right:18px;bottom:98px;z-index:28;
+  border:0;font-family:inherit;font-weight:600;font-size:14px;color:#fff;cursor:pointer;
+  height:50px;padding:0 20px;border-radius:999px;display:flex;align-items:center;gap:7px;
+  background:linear-gradient(135deg,#FF8273,#FF5B4A);
+  box-shadow:var(--shadow-float);
+}
+/* ============ stats ============ */
+.mod{
+  position:relative;background:#fff;border-radius:var(--r-card);
+  padding:16px 16px 14px;margin-bottom:12px;
+  box-shadow:var(--shadow-card);border:1px solid rgba(255,255,255,.75);
+  overflow:hidden;
+}
+.mod::before{
+  content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;
+  background:transparent;
+}
+.mod.tone-drink::before{background:linear-gradient(180deg,#67BDF2,#3B96DE)}
+.mod.tone-stand::before{background:linear-gradient(180deg,#5FD08A,#2FA45F)}
+.mod.tone-kegel::before{background:linear-gradient(180deg,#B7A3F0,#8264D8)}
+.mod.tone-custom::before{background:linear-gradient(180deg,#FFC08A,#F08A4B)}
+.mod-top{display:flex;align-items:center;gap:11px;position:relative}
+.mod-top h3{margin:0;font-size:14.5px;font-weight:600}
+.mod-top .hint{margin:2px 0 0;font-size:11px;color:var(--ink-3)}
+.mod-top .val{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums}
+.mod-top .val b{font-size:20px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mod-top .val span{font-size:11px;color:var(--ink-3);margin-left:2px}
+.bar{height:7px;border-radius:999px;background:#F3EBE6;overflow:hidden;margin:14px 0 0}
+.bar i{display:block;height:100%;border-radius:999px;transition:width .55s cubic-bezier(.4,0,.2,1)}
+.bar i.drink{background:linear-gradient(90deg,#67BDF2,#3B96DE)}
+.bar i.stand{background:linear-gradient(90deg,#5FD08A,#2FA45F)}
+.bar i.kegel{background:linear-gradient(90deg,#B7A3F0,#8264D8)}
+.bar i.custom{background:linear-gradient(90deg,#FFC08A,#F08A4B)}
+.mod-x{
+  border:0;background:transparent;color:#CFC5BE;font-family:inherit;
+  font-size:15px;line-height:1;padding:2px 0 2px 6px;cursor:pointer;
+}
+.mod-x:hover{color:var(--primary)}
+.ok-tag{color:#2A8C4A;font-weight:600}
+.chips{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
+.chip{
+  border:1px solid var(--hair);background:#fff;font-family:inherit;font-size:12.5px;font-weight:600;
+  color:var(--ink-2);border-radius:999px;padding:7px 13px;cursor:pointer;transition:.16s;
+}
+.chip:active{background:var(--primary-soft);border-color:rgba(255,107,91,.4);color:var(--primary)}
+.chip.solid{background:var(--primary-soft);border-color:rgba(255,107,91,.32);color:#E2543F}
+.logs{margin:11px 0 0;font-size:11.5px;color:var(--ink-3);line-height:1.6}
+.mod-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;border-top:1px dashed var(--hair);padding-top:10px}
+.logs.quiet{color:#BDB4AE}
+.logs .rec-link{
+  float:right;margin-top:-2px;border:0;background:transparent;font-family:inherit;
+  font-size:11.5px;font-weight:600;color:var(--primary);cursor:pointer;
+  display:inline-flex;align-items:center;gap:2px;padding:0;
+}
+.stats-foot{
+  text-align:center;font-size:11px;color:#C6BCB6;margin:18px 0 4px;line-height:1.75;letter-spacing:.02em;
+}
+/* 趋势页 */
+.trend-sum{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+.trend-sum .cell{
+  background:#fff;border-radius:16px;padding:13px 14px;
+  box-shadow:var(--shadow-card);border:1px solid rgba(255,255,255,.75);
+}
+.trend-sum .cell .k{margin:0;font-size:11px;color:var(--ink-3);letter-spacing:.02em}
+.trend-sum .cell .v{margin:5px 0 0;font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+.trend-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:2px}
+.trend-head .meta{font-size:11.5px;color:var(--ink-3)}
+.trend-head .meta b{color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums}
+.chart-wrap{position:relative;padding:8px 2px 0;margin-top:6px}
+.chart-target{
+  position:absolute;left:0;right:0;border-top:1px dashed rgba(255,107,91,.45);
+  pointer-events:none;z-index:1;
+}
+.chart-target span{
+  position:absolute;right:0;top:-9px;font-size:9.5px;color:var(--primary);
+  background:rgba(255,255,255,.92);padding:0 4px;letter-spacing:.02em;
+}
+.chart{display:flex;align-items:flex-end;gap:8px;height:128px}
+.chart .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%}
+.chart .b{
+  width:100%;max-width:28px;border-radius:8px 8px 4px 4px;
+  background:linear-gradient(180deg,#B8DCF5,#6BB0E4);transition:height .5s;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35);
+}
+.chart .col.ok .b{background:linear-gradient(180deg,#8FD9AE,#3FB06E)}
+.chart .col.today .b{
+  background:linear-gradient(180deg,#FFB3A8,#FF7A68);
+  box-shadow:0 6px 14px -8px rgba(255,91,74,.7), inset 0 1px 0 rgba(255,255,255,.4);
+}
+.chart .col.dim .b{background:#EFE3DC;box-shadow:none}
+.chart .lb{font-size:9.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.chart .col.today .lb{color:var(--primary);font-weight:600}
+.chart .bv{font-size:9px;color:var(--ink-3);font-variant-numeric:tabular-nums;line-height:1;min-height:10px}
+.chart .col.today .bv{color:var(--primary);font-weight:600}
+.rec-list{margin-top:2px}
+.rec-row{
+  display:flex;align-items:center;gap:10px;padding:11px 2px;
+  border-bottom:1px solid var(--hair);font-size:12.5px;
+}
+.rec-row:last-child{border-bottom:0}
+.rec-row .t{font-variant-numeric:tabular-nums;color:var(--ink-2);width:46px;font-weight:500}
+.rec-row .d{color:var(--ink-3);font-size:11.5px}
+.rec-row .v{margin-left:auto;font-weight:600;color:var(--ink-2);font-size:12.5px;font-variant-numeric:tabular-nums}
+.rec-week{display:flex;align-items:flex-end;gap:9px;height:78px;margin-top:16px}
+.rec-week .rw{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:100%}
+.rec-week .rw i{display:block;width:100%;max-width:24px;border-radius:6px 6px 3px 3px;background:#EDE5E0;transition:height .4s}
+.rec-week .rw.on i{background:linear-gradient(180deg,#FFB0A3,#FF6B5B)}
+.rec-week .rw b{font-size:10px;font-weight:500;color:var(--ink-3);white-space:nowrap}
+.rec-week .rw.on b{color:var(--primary);font-weight:600}
+.rec-tip{margin:9px 0 0;font-size:11px;color:var(--ink-3)}
+.dots{display:flex;gap:6px;margin-top:13px}
+.dots i{width:100%;height:8px;border-radius:999px;background:#F1E9E4}
+.dots i.f.stand{background:#2FA45F}
+.dots i.f.kegel{background:#8264D8}
+.addmod{
+  width:100%;border:1px dashed rgba(160,140,130,.35);background:rgba(255,255,255,.35);border-radius:18px;
+  padding:16px;font-family:inherit;font-size:13px;color:var(--ink-3);cursor:pointer;
+  transition:background .2s, border-color .2s, color .2s;
+}
+.addmod:active{background:#fff;border-color:rgba(255,107,91,.35);color:var(--primary)}
+/* ============ forms / list rows ============ */
+.field{
+  background:#fff;border-radius:16px;padding:13px 15px;box-shadow:var(--shadow-card);
+  display:flex;align-items:center;gap:10px;margin-bottom:10px;
+}
+.field label{font-size:13px;color:var(--ink-2);min-width:64px}
+.field input{border:0;outline:0;font-family:inherit;font-size:14.5px;color:var(--ink);flex:1;background:transparent}
+.field input::placeholder{color:#BFB9B6}
+.role-row{display:flex;gap:10px;margin:10px 0 4px}
+.role{
+  flex:1;border:1.5px solid var(--hair);background:#fff;border-radius:16px;padding:14px 12px;
+  font-family:inherit;cursor:pointer;text-align:left;transition:.2s;
+}
+.role b{display:block;font-size:14px;margin-bottom:3px}
+.role span{font-size:11px;color:var(--ink-3);line-height:1.4;display:block}
+.role.on{border-color:var(--primary);background:#FFFBFA;box-shadow:0 8px 20px -14px rgba(255,91,74,.8)}
+.cta{
+  width:100%;border:0;font-family:inherit;font-weight:600;font-size:15.5px;color:#fff;cursor:pointer;
+  background:linear-gradient(135deg,#FF8071,#FF5C4B);border-radius:16px;padding:15px;margin-top:18px;
+  box-shadow:0 14px 28px -14px rgba(255,91,74,.9);
+}
+.fine{margin:14px 0 0;font-size:11px;color:var(--ink-3);text-align:center;line-height:1.7}
+.listcard{background:#fff;border-radius:var(--r-card);box-shadow:var(--shadow-card);margin-bottom:11px;overflow:hidden}
+.row{display:flex;align-items:center;gap:11px;padding:14px 15px;border-bottom:1px solid var(--hair);cursor:pointer}
+.row:last-child{border-bottom:0}
+.row .k{font-size:14px;font-weight:500;flex:1}
+.row .v{font-size:13px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.row .v b{color:var(--ink);font-weight:600}
+.group-title{font-size:11.5px;color:var(--ink-3);padding:6px 4px 9px;letter-spacing:.06em}
+/* 触底加载 */
+.feed-more{
+  display:block;width:100%;border:0;background:transparent;font-family:inherit;
+  font-size:11px;color:#C6BCB6;padding:16px 0 4px;cursor:pointer;letter-spacing:.02em;
+}
+.code{
+  font-family:var(--font);font-size:38px;font-weight:600;letter-spacing:.16em;color:var(--ink);
+  text-align:center;padding:22px 0 6px;font-variant-numeric:tabular-nums;
+}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0 16px;color:var(--ink-3);font-size:11.5px}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--hair)}
+/* ============ 锁屏通知 ============ */
+.lock{display:flex;flex-direction:column;padding:0 14px}
+.screen.lockwrap{background:linear-gradient(168deg,#FFE7DD 0%,#FFF7F2 38%,#F8E6DE 100%)}
+.lock .lt{text-align:center;margin:30px 0 0}
+.lock .lt b{display:block;font-size:66px;font-weight:300;letter-spacing:-.03em;line-height:1.05}
+.lock .lt span{font-size:12.5px;color:var(--ink-2);letter-spacing:.06em}
+.notif{
+  margin-top:30px;background:rgba(255,255,255,.84);backdrop-filter:blur(22px) saturate(1.4);
+  border-radius:22px;padding:13px 14px;border:1px solid rgba(255,255,255,.95);
+  box-shadow:0 14px 34px -18px rgba(120,70,50,.55);
+}
+.notif .nh{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-3)}
+.notif .nh .app{
+  width:20px;height:20px;border-radius:6px;display:grid;place-items:center;color:#fff;
+  background:linear-gradient(160deg,#FF8B7B,#FF5B4A);font-family:var(--serif);font-size:12px;
+}
+.notif .nh b{color:var(--ink-2);font-weight:600}
+.notif .nh .t{margin-left:auto}
+.notif .nt{margin:9px 0 0;font-size:14px;font-weight:600}
+.notif .nb2{margin:3px 0 0;font-size:13px;color:var(--ink-2);line-height:1.5}
+.notif .nacts{display:flex;gap:8px;margin-top:12px}
+.notif .nacts button{flex:1;padding:9px 0;font-size:12.5px;border-radius:12px}
+.lock .lock-hint{text-align:center;margin:auto 0 30px;font-size:11px;color:var(--ink-3);line-height:1.6}
+
+.scrim{position:absolute;inset:0;background:rgba(30,20,16,.34);backdrop-filter:blur(2px);z-index:44;animation:fade .22s ease}
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;z-index:45;background:#fff;border-radius:26px 26px 0 0;
+  padding:9px 18px 26px;max-height:80%;overflow-y:auto;animation:up .3s cubic-bezier(.3,.9,.3,1);
+  box-shadow:0 -16px 40px -20px rgba(90,50,35,.5);
+}
+.sheet::-webkit-scrollbar{display:none}
+.handle{width:38px;height:4px;border-radius:99px;background:#E8DDD7;margin:0 auto 14px}
+.sheet h2{margin:0 0 3px;font-size:17px;font-weight:600}
+.sheet .s-sub{margin:0 0 16px;font-size:12px;color:var(--ink-3)}
+.types{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.types button{
+  border:1.5px solid var(--hair);background:#fff;border-radius:16px;padding:12px 2px 10px;
+  font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;
+  font-size:11px;font-weight:600;color:var(--ink-2);transition:.2s;white-space:nowrap;
+}
+.types button i{font-style:normal;font-size:19px;line-height:1}
+.types button.on{border-color:var(--primary);background:#FFF9F7;color:#E2543F}
+.inputbox{
+  margin-top:14px;background:#FAF6F3;border-radius:14px;padding:12px 13px;border:1px solid transparent;
+  transition:.2s;
+}
+.inputbox:focus-within{background:#fff;border-color:rgba(255,107,91,.4)}
+.inputbox textarea,.inputbox input{
+  width:100%;border:0;outline:0;background:transparent;font-family:inherit;font-size:14.5px;color:var(--ink);
+  resize:none;line-height:1.5;padding:0;
+}
+.inputbox textarea::placeholder,.inputbox input::placeholder{color:#BFB9B6}
+.inputbox .cnt{display:block;text-align:right;font-size:10.5px;color:var(--ink-3);margin-top:4px;font-variant-numeric:tabular-nums}
+.sugg{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.imgadd{
+  margin-top:11px;border:1px dashed rgba(160,140,130,.42);border-radius:14px;padding:13px;
+  font-size:12.5px;color:var(--ink-3);text-align:center;cursor:pointer;
+}
+.note{margin:11px 0 0;font-size:11px;color:var(--ink-3);text-align:center;line-height:1.6}
+/* ============ toast ============ */
+.toast{
+  position:absolute;left:50%;bottom:112px;transform:translateX(-50%);z-index:70;
+  background:rgba(28,24,22,.9);color:#fff;font-size:12.5px;padding:10px 16px;border-radius:999px;
+  white-space:nowrap;animation:toastIn .3s cubic-bezier(.3,.9,.3,1);backdrop-filter:blur(6px);
+}
+/* ============ splash ============ */
+.splash{justify-content:center;align-items:center;text-align:center;padding-bottom:40px}
+.splash .logo{width:132px;height:164px;color:var(--primary)}
+.splash .wm{font-family:var(--serif);font-size:72px;font-weight:600;letter-spacing:.04em;line-height:1;margin:6px 0 0}
+.splash .en{font-size:11px;letter-spacing:.44em;color:var(--ink-3);text-transform:uppercase;margin:14px 0 0;padding-left:.44em}
+.splash .sl{font-size:12.5px;color:var(--ink-2);letter-spacing:.24em;margin:26px 0 0}
+.splash .ver{position:absolute;bottom:34px;left:0;right:0;font-size:10.5px;color:#C6BCB6;letter-spacing:.1em}
+.trunk{stroke-dasharray:90;stroke-dashoffset:90;animation:draw 1s .1s cubic-bezier(.4,0,.2,1) forwards}
+.br{stroke-dasharray:40;stroke-dashoffset:40;animation:draw .7s .55s cubic-bezier(.4,0,.2,1) forwards}
+.thr{opacity:0;animation:fadeIn .4s .95s forwards}
+.hh{opacity:0;transform-box:fill-box;transform-origin:center;animation:pop .55s 1.05s cubic-bezier(.3,1.4,.5,1) forwards}
+.hh.b{animation-delay:1.2s}
+.hh.sway{animation:pop .55s 1.05s cubic-bezier(.3,1.4,.5,1) forwards, sway 4.5s 1.6s ease-in-out infinite}
+.hh.b.sway{animation:pop .55s 1.2s cubic-bezier(.3,1.4,.5,1) forwards, sway 4.5s 2s ease-in-out infinite}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes fadeIn{to{opacity:1}}
+@keyframes pop{0%{opacity:0;transform:scale(.3)}100%{opacity:1;transform:scale(1)}}
+@keyframes sway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+@keyframes beat{0%,100%{transform:scale(1)}14%{transform:scale(1.18)}28%{transform:scale(1)}42%{transform:scale(1.12)}56%{transform:scale(1)}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* ============ board ============ */
+.board-head{max-width:1300px;margin:0 auto 26px}
+.board-head h2{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:.02em}
+.board-head p{margin:8px 0 0;font-size:13px;color:var(--ink-2);line-height:1.7;max-width:640px}
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(292px,1fr));gap:34px 26px;max-width:1300px;margin:0 auto}
+.bi{display:flex;flex-direction:column;align-items:center}
+.bi .cap{margin-top:14px;font-size:12px;font-weight:600;color:var(--ink)}
+.bi .cap span{display:block;font-weight:400;color:var(--ink-3);font-size:11px;margin-top:3px;letter-spacing:.02em}
+.frame{width:292px;height:632px;position:relative}
+.frame .device{
+  width:390px;height:844px;transform:scale(.7485);transform-origin:top left;
+  box-shadow:0 0 0 9px #17171A, 0 0 0 10px #3B3B42, 0 30px 56px -24px rgba(90,50,35,.45);
+  border-radius:48px;
+}
+.frame .device *{pointer-events:none}
+/* spec section */
+.spec{max-width:1300px;margin:74px auto 0}
+.spec h2{font-family:var(--serif);font-size:26px;font-weight:600;margin:0 0 6px;letter-spacing:.02em}
+.spec>p{margin:0 0 26px;font-size:13px;color:var(--ink-2)}
+.spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.panel{background:#fff;border-radius:20px;padding:20px 22px;box-shadow:0 10px 30px -22px rgba(90,50,35,.5)}
+.panel h3{margin:0 0 14px;font-size:13px;letter-spacing:.06em;color:var(--ink);font-weight:600}
+.sw{display:flex;flex-direction:column;gap:9px}
+.sw .r{display:flex;align-items:center;gap:11px;font-size:12px;color:var(--ink-2)}
+.sw .c{width:34px;height:34px;border-radius:10px;flex:0 0 34px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.05)}
+.sw .r b{color:var(--ink);font-weight:600;min-width:52px}
+.sw .r code{font-size:11px;color:var(--ink-3);font-family:ui-monospace,Menlo,monospace}
+.ts{display:flex;flex-direction:column;gap:12px}
+.ts .t{display:flex;align-items:baseline;gap:12px;border-bottom:1px dashed var(--hair);padding-bottom:10px}
+.ts .t:last-child{border:0;padding:0}
+.ts .t .lbl{font-size:11px;color:var(--ink-3);min-width:74px}
+.ts .t .smp{color:var(--ink)}
+.logos{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;text-align:center}
+.logos .l{background:#FFF8F5;border-radius:14px;padding:12px 6px 9px}
+.logos .l svg{width:38px;height:46px;color:var(--primary)}
+.logos .l p{margin:7px 0 0;font-size:10.5px;color:var(--ink-3);letter-spacing:.02em}
+.mot{display:flex;flex-direction:column;gap:10px}
+.mot .m{font-size:12px;color:var(--ink-2);line-height:1.6;display:grid;grid-template-columns:16px 1fr;gap:8px}
+.mot .m b{color:var(--ink);font-weight:600}
+.mot .m i{color:var(--primary);font-style:normal}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><b>惦</b><span>Mind</span><i>视觉原型 v1</i></div>
+  <div class="tool">
+    <div class="switch" id="viewSwitch">
+      <button data-view="single" class="on">单机演示</button>
+      <button data-view="board">全部页面</button>
+    </div>
+  </div>
+  <div class="tool">
+    <span>身份</span>
+    <div class="switch" id="roleSwitch">
+      <button data-role="husband" class="on">我是老公</button>
+      <button data-role="wife">我是老婆</button>
+    </div>
+  </div>
+  <div class="tool">
+    <span>From 空态</span>
+    <div class="switch" id="emptySwitch">
+      <button data-empty="0" class="on">关</button>
+      <button data-empty="1">开</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <!-- ================= single ================= -->
+  <section class="view on" id="view-single">
+    <div class="stage">
+      <div class="device" id="device">
+        <div class="punch"></div>
+        <div class="app" id="appRoot"></div>
+        <div id="sheetRoot"></div>
+        <div id="toastRoot"></div>
+      </div>
+      <div class="notes">
+        <h3>怎么玩</h3>
+        <ol>
+          <li>三个 Tab：<b>互动 / 惦 / 日常</b>。</li>
+          <li>互动页保持时间顺序，不置顶；还没做的集中在「惦」的 From 页。</li>
+          <li>点任何卡片 → 详情弹层，互动页和惦页效果一致；回应过文字或图片的在详情里看。</li>
+          <li>未读在她发来的卡片<b>旁边</b>一个红点；看过没做的变成空心灰圈；做完了不标记。</li>
+          <li>互动流不是只今天：默认 20 条，<b>往上滑到底自动加载更早的</b>，按天分段。</li>
+          <li>点<b>回应</b> → 填水量、附言、加图 → 标记为做了。</li>
+          <li>点<b>知道了</b> → 只停声音和震动，这条不算做，还留在原处。</li>
+          <li>「惦」的图标上有红点，表示今天还有没做的（不显示数字）。</li>
+          <li>期限只到当天：昨天没做的，掉进历史，标一句「当天没做」，不说过期。</li>
+          <li>右下角红色按钮 → 发一条新惦记。</li>
+          <li>顶栏切「我是老公 / 我是老婆」，全站称呼跟着变。</li>
+        </ol>
+        <h3>这里做了取舍</h3>
+        <p style="margin:0">一条提醒只有「做了 / 没做」。已读未读、响没响，是标记不是状态。没有搁置、没有过期、没有未读红点。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= board ================= -->
+  <section class="view" id="view-board">
+    <div class="board-head">
+      <h2>全部页面</h2>
+      <p>13 屏，按开发顺序排：启动 → 登录 → 绑定 → 三个 Tab → 两个关键弹层 → 二级页。每一屏都是同一套组件跑出来的，不是画出来的图。</p>
+    </div>
+    <div class="board" id="boardRoot"></div>
+
+    <div class="spec">
+      <h2>视觉规范</h2>
+      <p>颜色、字阶、Logo 变体与动效规则。括号里是我对文档里「待确认」项的默认取值。</p>
+      <div class="spec-grid">
+
+        <div class="panel">
+          <h3>色彩</h3>
+          <div class="sw">
+            <div class="r"><span class="c" style="background:#FF6B5B"></span><b>主色</b><code>#FF6B5B · 心跳温度</code></div>
+            <div class="r"><span class="c" style="background:#FF8FA3"></span><b>次色</b><code>#FF8FA3 · 柔和亲密</code></div>
+            <div class="r"><span class="c" style="background:#FF9500"></span><b>待回应</b><code>#FF9500 · 需要行动</code></div>
+            <div class="r"><span class="c" style="background:#34C759"></span><b>已放心</b><code>#34C759 · 安心</code></div>
+            <div class="r"><span class="c" style="background:#8E8E93"></span><b>搁置</b><code>#8E8E93 · 中性</code></div>
+            <div class="r"><span class="c" style="background:#1C1C1E"></span><b>文字</b><code>#1C1C1E</code></div>
+            <div class="r"><span class="c" style="background:#FFF8F5;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)"></span><b>背景</b><code>#FFF8F5 · 暖白</code></div>
+            <div class="r"><span class="c" style="background:#F4E9E3"></span><b>轨道</b><code>#F4E9E3 · 分段控件/进度底</code></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>字号层级</h3>
+          <div class="ts">
+            <div class="t"><span class="lbl">品牌字 72/1.0</span><span class="smp" style="font-family:var(--serif);font-size:34px;font-weight:600">惦</span></div>
+            <div class="t"><span class="lbl">页面标题 21</span><span class="smp" style="font-size:19px;font-weight:600">对话</span></div>
+            <div class="t"><span class="lbl">卡片标题 14.5</span><span class="smp" style="font-size:14.5px;font-weight:600">膀胱炎要记得喝水！</span></div>
+            <div class="t"><span class="lbl">正文 14.5</span><span class="smp" style="font-size:14.5px">多喝点温水，别又忘了</span></div>
+            <div class="t"><span class="lbl">辅助 11.5</span><span class="smp" style="font-size:11.5px;color:var(--ink-3)">2 分钟前 · 已放心</span></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>几何</h3>
+          <div class="ts">
+            <div class="t"><span class="lbl">消息卡</span><span class="smp" style="font-size:13px">圆角 18 ／ 最宽 78% ／ 朝向侧的上角收成 7</span></div>
+            <div class="t"><span class="lbl">阴影</span><span class="smp" style="font-size:13px">0 8px 20px -16px rgba(140,80,60,.34)</span></div>
+            <div class="t"><span class="lbl">页边距</span><span class="smp" style="font-size:13px">16px ／ 卡片内 11–13px</span></div>
+            <div class="t"><span class="lbl">触控高度</span><span class="smp" style="font-size:13px">主按钮 40–52 · 小按钮 ≥ 34</span></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>角标与提示</h3>
+          <div style="display:flex;align-items:center;gap:26px;margin-bottom:14px">
+            <div style="text-align:center">
+              <div class="icon-badge"><span style="font-family:var(--serif);font-size:24px">惦</span><i class="nb">2</i></div>
+              <p style="margin:8px 0 0;font-size:10.5px;color:var(--ink-3)">桌面图标（可带数字）</p>
+            </div>
+            <div style="text-align:center">
+              <div style="position:relative;width:52px;height:52px;border-radius:15px;background:#FFF3EE;display:grid;place-items:center;color:var(--primary)">
+                <svg width="26" height="26" viewBox="0 0 26 26" fill="currentColor"><path d="M13 21.6s-7.6-4.9-7.6-10.1a4.4 4.4 0 0 1 7.6-3 4.4 4.4 0 0 1 7.6 3c0 5.2-7.6 10.1-7.6 10.1z"/></svg>
+                <i class="tab-dot" style="top:8px;right:8px"></i>
+              </div>
+              <p style="margin:8px 0 0;font-size:10.5px;color:var(--ink-3)">Tab 2 · 红点</p>
+            </div>
+          </div>
+          <div class="mot">
+            <div class="m"><i>●</i><span>Tab 上只亮<b>红点</b>：今天还有没做的。全部做完，红点消失。</span></div>
+            <div class="m"><i>●</i><span>「知道了」只停声音震动，<b>不消红点</b>——没做就是没做。</span></div>
+            <div class="m"><i>●</i><span>过了零点自动清零，不累计、不追责。</span></div>
+          </div>
+        </div>
+
+        <div class="panel" style="grid-column:span 2">
+          <h3>Logo 四个变体</h3>
+          <div class="logos" id="logoRow"></div>
+        </div>
+
+        <div class="panel">
+          <h3>动效（≤ 1.2s，不常驻）</h3>
+          <div class="mot">
+            <div class="m"><i>●</i><span><b>启动页</b>：树干 1s 长出来，两颗心先后弹出并轻摆，之后静止。</span></div>
+            <div class="m"><i>●</i><span><b>收到提醒</b>：对应那一侧的心跳一下（0.6s，只一次）。</span></div>
+            <div class="m"><i>●</i><span><b>回应完成</b>：两颗心同频两下，这一条收成一行灰字（0.4s）。</span></div>
+            <div class="m"><i>●</i><span><b>不做</b>：呼吸光晕、循环粒子、常驻动画。</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ======================= 状态 ======================= */
+/* 状态模型（v2）
+   一条提醒只有两种状态：todo 没做 / done 做了。
+   另有两个正交标记：read 看过没有、silenced 有没有点过「知道了」（只停提示音，不算做）。
+   期限只到当天结束，跨天不再是"没做"，是历史里的"当天没做"，不叫过期。 */
+const S = {
+  me:'husband',
+  tab:'chat',
+  mindSide:'from',
+  fromEmpty:false,
+  sheet:null,
+  compose:{type:'drink', text:'', title:''},
+  respond:{id:null, amount:300, count:1, reply:''},
+  toast:null,
+  reminders:[
+    {id:'r8', dir:'in',  type:'poke',   content:'', time:'刚刚', min:0, state:'done', read:true},
+    {id:'r1', dir:'in',  type:'drink',  content:'膀胱炎要记得喝水！', time:'2 分钟前', min:2, state:'todo', read:false},
+    {id:'r2', dir:'in',  type:'stand',  content:'起来走两步，别又坐一上午', time:'2 小时前', min:120, state:'todo', read:true, silenced:true},
+    {id:'r3', dir:'out', type:'drink',  content:'多喝点温水', time:'30 分钟前', min:30, state:'todo', read:true},
+    {id:'r4', dir:'out', type:'stand',  content:'', time:'2 小时前', min:120, state:'done', count:1, reply:'走完啦，还出了点汗'},
+    {id:'r5', dir:'in',  type:'custom', title:'记得吃药', time:'16:30', min:390, state:'done', reply:'吃完啦', hasImage:true},
+    {id:'r6', dir:'out', type:'poke',   content:'', time:'3 小时前', min:180, state:'done'},
+    {id:'r7', dir:'in',  type:'poke',   content:'', time:'5 小时前', min:300, state:'done', read:true},
+    {id:'r0', dir:'in',  type:'drink',  content:'今天记得早点睡', time:'昨天 22:40', min:1120, state:'todo', read:false, yesterday:true}
+  ],
+  /* 互动流不是"只今天"：默认给 20 条，触底再往下拿更早的（真实产品这里是服务端分页） */
+  older: [],
+  shown: 20,
+  trendId:'drink',
+  size: 20,
+  loading: false,
+  /* week = 前 6 天的记录（今天不在里面，避免重复算）；只留 7 天，多了不看 */
+  drink:{target:2000, logs:[{t:'15:30', ml:250},{t:'14:00', ml:300}],
+    week:[1800,2100,1500,2000,1700,2200]},
+  /* 除喝水外，模块只记次数；满了标"已完成"，但还能接着打 */
+  mods:[
+    {id:'stand', name:'起身站立', icon:'🧍', tone:'stand', target:6, count:2, times:['15:05','11:20'], week:[3,6,4,2,7,5], hint:'坐久了就站起来'},
+    {id:'kegel', name:'提肛',     icon:'🌿', tone:'kegel',  target:3, count:1, times:['09:30'], week:[2,3,3,1,3,2], hint:'随手一组，没人看得见'},
+    {id:'read',  name:'读书 10 页', icon:'📖', tone:'custom', target:2, count:2, times:['21:10','08:40'], week:[2,1,2,0,2,2], hint:'睡前翻两页'}
+  ],
+  newMod:{name:'', target:3}
+};
+const HER = () => S.me === 'husband' ? '她' : '他';
+const reassureLabel = () => '让' + HER() + '放心';
+
+/* 更早的互动（演示分页用）：真实产品这里是服务端往下翻页 */
+S.older = (() => {
+  const rows = [
+    ['昨天','in','drink','21:40','done',{content:'睡前那杯别忘了',amount:250,reply:'喝完啦'}],
+    ['昨天','out','stand','18:30','done',{count:2,reply:'刚走了两圈'}],
+    ['昨天','in','custom','17:10','done',{title:'记得买酸奶',reply:'买了，草莓味',hasImage:true}],
+    ['昨天','in','poke','16:00','done',{}],
+    ['昨天','out','drink','14:20','done',{content:'下午也喝点',amount:300}],
+    ['昨天','in','stand','11:40','todo',{}],
+    ['昨天','out','poke','09:20','done',{}],
+    ['10 月 19 日','in','custom','22:10','done',{title:'明天带伞',reply:'看了天气预报，真下雨'}],
+    ['10 月 19 日','out','drink','20:00','done',{amount:200,content:'晚上少喝浓茶'}],
+    ['10 月 19 日','in','stand','16:30','done',{}],
+    ['10 月 19 日','in','drink','15:10','done',{content:'你又忘了',amount:300,reply:'在喝了在喝了'}],
+    ['10 月 19 日','out','custom','12:00','done',{title:'午休躺十分钟',reply:'躺了，睡着了'}],
+    ['10 月 19 日','in','poke','10:30','done',{}],
+    ['10 月 19 日','in','custom','09:00','todo',{title:'记得交水费'}],
+    ['10 月 18 日','in','stand','21:00','done',{}],
+    ['10 月 18 日','out','drink','18:40','done',{amount:250}],
+    ['10 月 18 日','in','custom','16:20','done',{title:'今天降温，加件外套',reply:'穿上了'}],
+    ['10 月 18 日','in','drink','14:00','done',{amount:400}],
+    ['10 月 18 日','out','poke','11:20','done',{}],
+    ['10 月 18 日','in','custom','09:30','done',{title:'记得吃药',reply:'吃完啦',hasImage:true}],
+    ['10 月 17 日','in','drink','20:30','done',{content:'白天太忙了吧',amount:250}],
+    ['10 月 17 日','out','stand','17:00','done',{count:1}],
+    ['10 月 17 日','in','custom','14:10','done',{title:'晚上想吃啥',reply:'随便，你定'}],
+    ['10 月 17 日','in','poke','11:50','done',{}],
+    ['10 月 17 日','out','drink','09:10','done',{amount:300}],
+    ['10 月 17 日','in','stand','08:30','todo',{}],
+    ['10 月 16 日','in','custom','22:00','done',{title:'早点休息'}],
+    ['10 月 16 日','out','custom','19:30','done',{title:'周末去看电影',reply:'好啊，我买票'}],
+    ['10 月 16 日','in','drink','15:30','done',{amount:200}],
+    ['10 月 16 日','in','custom','12:20','done',{title:'中午记得吃饭',reply:'在吃了',hasImage:true}],
+    ['10 月 16 日','out','poke','10:00','done',{}],
+    ['10 月 15 日','in','drink','21:00','done',{amount:250}],
+    ['10 月 15 日','in','stand','16:40','done',{}],
+    ['10 月 15 日','out','drink','13:00','done',{amount:200,content:'温水，别喝冰的'}],
+    ['10 月 15 日','in','custom','09:20','done',{title:'记得吃早饭',reply:'来不及了…'}]
+  ];
+  return rows.map(([day,dir,type,time,state,x], i) =>
+    ({id:'old'+i, day, dir, type, time, state, past:true, read:true, min:0, ...x}));
+})();
+
+/* 整条互动流：今天的（含昨天那条）+ 更早的；默认只渲染前 S.shown 条。
+   注意：这里返回的是原对象引用（回应/详情要能改到状态），day 就地打标 */
+const feedAll = () => {
+  S.reminders.forEach(r => { r.day = r.yesterday ? '昨天' : '今天'; });
+  return [...S.reminders, ...S.older];
+};
+const findMsg = (id) => feedAll().find(r => r.id === id) || null;
+const TYPES = {
+  drink: {icon:'💧', label:'喝水',   tone:'drink'},
+  stand: {icon:'🧍', label:'起身',   tone:'stand'},
+  kegel: {icon:'🌿', label:'提肛',   tone:'kegel'},
+  custom:{icon:'✎',  label:'惦记',   tone:'custom'},
+  poke:  {icon:'👆', label:'戳一下', tone:'poke'}
+};
+
+/* ======================= 小工具 ======================= */
+const statusbar = () => `<div class="statusbar"><span>9:41</span><span class="sb">
+<svg width="17" height="11" viewBox="0 0 17 11"><path d="M1 8h2.2v3H1zM5.4 5.4h2.2V11H5.4zM9.8 2.8h2.2V11H9.8zM14.2 0h2.2v11h-2.2z" fill="currentColor"/></svg>
+<svg width="15" height="11" viewBox="0 0 15 11"><path d="M7.5 9.4l2-2.4a3.2 3.2 0 0 0-4 0l2 2.4z" fill="currentColor"/><path d="M7.5 1.3c2.2 0 4.3.8 5.8 2.2l-1.2 1.3a6.9 6.9 0 0 0-4.6-1.7 6.9 6.9 0 0 0-4.6 1.7L1.7 3.5A8.8 8.8 0 0 1 7.5 1.3z" fill="currentColor"/></svg>
+<svg width="25" height="12" viewBox="0 0 25 12"><rect x=".7" y=".7" width="21" height="10.6" rx="3" stroke="currentColor" stroke-opacity=".38" fill="none"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M23 4.2v3.6a2.1 2.1 0 0 0 0-3.6z" fill="currentColor" fill-opacity=".45"/></svg>
+</span></div>`;
+
+const chev = (s=12) => `<svg width="${s}" height="${s}" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 2.5L8 6l-3.5 3.5"/></svg>`;
+const chevBack = (s=14) => `<svg width="${s}" height="${s}" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 2.5L4 6l3.5 3.5"/></svg>`;
+
+const ICONS = {
+  chat:(on)=>`<svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M21.6 12.7c0 3.9-3.9 7.1-8.6 7.1-1 0-2-.1-2.9-.4L5.4 21l1.1-3.4c-1.4-1.3-2.2-3.1-2.2-5 0-3.9 3.9-7.1 8.6-7.1s8.7 3.2 8.7 7.2z" ${on?'fill="currentColor" fill-opacity=".1"':''}/></svg>`,
+  mind:(on)=>`<svg viewBox="0 0 26 26" ${on?'fill="currentColor"':'fill="none" stroke="currentColor" stroke-width="1.7"'} stroke-linejoin="round"><path d="M13 21.6s-7.6-4.9-7.6-10.1a4.4 4.4 0 0 1 7.6-3 4.4 4.4 0 0 1 7.6 3c0 5.2-7.6 10.1-7.6 10.1z"/></svg>`,
+  stats:(on)=>`<svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" ${on?'stroke-width="2.3"':''}><path d="M6 20.5V12M13 20.5V5.5M20 20.5v-5.5"/></svg>`
+};
+const tabbar = (active) => {
+  const n = todoCount();
+  return `<div class="tabbar">
+  <button class="tab ${active==='chat'?'on':''}" data-act="tab:chat">${ICONS.chat(active==='chat')}<span>互动</span></button>
+  <button class="tab ${active==='mind'?'on':''}" data-act="tab:mind"><span class="ico">${ICONS.mind(active==='mind')}${n?`<i class="tab-dot" aria-hidden="true"></i>`:''}</span><span>惦</span></button>
+  <button class="tab ${active==='stats'?'on':''}" data-act="tab:stats">${ICONS.stats(active==='stats')}<span>日常</span></button>
+</div>`;};
+
+const wrap = (inner, opt={}) => `<div class="screen ${opt.cls||''}">${statusbar()}${inner}${opt.tab?tabbar(opt.tab):''}</div>`;
+
+const heartPath = (cx, cy, s=8) =>
+  `M${cx} ${cy+s*0.85} C${cx-s*0.78} ${cy+s*0.28}, ${cx-s*0.8} ${cy-s*0.58}, ${cx-s*0.34} ${cy-s*0.58} C${cx-s*0.13} ${cy-s*0.58}, ${cx} ${cy-s*0.38}, ${cx} ${cy-s*0.28} C${cx} ${cy-s*0.38}, ${cx+s*0.13} ${cy-s*0.58}, ${cx+s*0.34} ${cy-s*0.58} C${cx+s*0.8} ${cy-s*0.58}, ${cx+s*0.78} ${cy+s*0.28}, ${cx} ${cy+s*0.85} Z`;
+
+const logoSVG = (cls='') => `<svg class="${cls}" viewBox="0 0 120 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path class="trunk" d="M60 146C60 120 60 98 60 74" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>
+  <path class="br" d="M60 79C60 68 49 61 37 57" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <path class="br" d="M60 79C60 68 71 61 83 57" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <path class="thr" d="M37 57v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+  <path class="thr" d="M83 57v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+  <path class="hh sway" d="${heartPath(37,70,9.6)}" fill="currentColor"/>
+  <path class="hh b sway" d="${heartPath(83,70,9.6)}" fill="currentColor"/>
+</svg>`;
+const logoMini = () => `<svg class="mark" width="100%" height="100%" viewBox="0 0 40 48" fill="none"><path d="M20 45V22" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M20 24C20 17 14 13.5 8.5 11.5" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/><path d="M20 24C20 17 26 13.5 31.5 11.5" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/><path d="${heartPath(8.5,15.5,4.6)}" fill="currentColor"/><path d="${heartPath(31.5,15.5,4.6)}" fill="currentColor"/></svg>`;
+
+const threadSVG = (glow) => `<svg class="thread-svg" viewBox="0 0 240 56" fill="none">
+  <path d="M62 18C92 44 148 44 178 18" stroke="#FF6B5B" stroke-opacity=".2" stroke-width="1.4" stroke-dasharray="2 5" stroke-linecap="round"/>
+  <path d="M62 20v3" stroke="#C9B5AD" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M178 20v3" stroke="#C9B5AD" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="${heartPath(62,26,7.4)}" fill="#E7CCC5"/>
+  <path class="${glow?'beat':''}" d="${heartPath(178,26,7.4)}" fill="#FF6B5B"/>
+</svg>`;
+
+/* ======================= 状态与卡片 ======================= */
+const todoCount = () => S.reminders.filter(r => r.dir==='in' && r.state==='todo' && !r.yesterday).length;
+/* 打卡：满了也允许继续，不封顶。每一次都留时间，记录才看得见 */
+const nowHM = () => {
+  const d = new Date();
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+};
+const bumpMod = (id) => {
+  const m = S.mods.find(x => x.id === id); if (!m) return null;
+  m.count += 1;
+  m.times = [nowHM(), ...(m.times||[])].slice(0, 40);
+  return m;
+};
+/* 记录弹层要的数据：今天明细 + 近 7 天（含今天） */
+const modOf = (id) => id === 'drink'
+  ? {id:'drink', name:'喝水', icon:'💧', tone:'drink', target:S.drink.target,
+     count:S.drink.logs.length, times:S.drink.logs.map(l=>l.t),
+     week:S.drink.week, unit:'ml'}
+  : (() => { const m = S.mods.find(x=>x.id===id); return m ? {...m, unit:'次'} : null; })();
+const labelOf = (r) => r.type==='custom' ? (r.title||'一句话') : TYPES[r.type].label;
+
+/* 状态一律用标记表达，不写文案：红点=未读，空圈=仅读，折角=有回应 */
+
+/* 互动流：左右分边，不用头像。点任何卡片 → 详情弹层（与惦页一致） */
+function msgHTML(r){
+  const t = TYPES[r.type], inSide = r.dir==='in', name = labelOf(r);
+
+  /* 戳一下：不需要回应、也不用点开。只有最新一条、且是她发来的，才在行尾给一个回戳 */
+  if (r.type === 'poke'){
+    const newest = S.reminders[0];
+    const canPokeBack = inSide && newest && newest.id === r.id;
+    return `<div class="msg ${inSide?'in':'out'}"><div class="done-line poke-line">
+      <span>${t.icon}</span><span>${name}</span>
+      <span class="t">${r.time}</span>
+      ${canPokeBack ? `<button class="pback" data-act="poke:${r.id}">回戳</button>` : ''}
+    </div></div>`;
+  }
+
+  const done = r.state === 'done';
+  const past = !!r.past || !!r.yesterday;
+  /* 未读 / 仅读只在惦页 From 那一排区分，互动流里卡片旁边什么都不放 */
+  const unread = inSide && !done && !past && !r.read;
+  const actable = inSide && !done && !past;
+  const hasReply = !!(r.reply || r.hasImage);
+  /* 她发来的卡片不写任何状态；我发出去的只说「未读 / 仅读」两个字，
+     已回应靠右下折角，不写字。过了当天不标记。 */
+  const ostate = (!inSide && !done && !past)
+    ? `<span class="ostate ${r.read?'read':'unread'}">${r.read?'仅读':'未读'}</span>` : '';
+  return `<div class="msg ${inSide?'in':'out'}">
+    ${ostate}
+    <div class="bub ${hasReply?'bookmark':''}" data-act="detail:${r.id}" role="button">
+      <div class="mh"><b>${t.icon} ${name}</b><span class="t">${r.time}</span></div>
+      ${r.content ? `<p class="mtext">${r.content}</p>` : ''}
+      ${actable
+        ? `<div class="macts">
+             <button class="btn-respond" data-act="respond:${r.id}">回应</button>
+             ${unread?`<button class="btn-ghost" data-act="silence:${r.id}">知道了</button>`:''}
+           </div>`
+        : ''}
+    </div>
+  </div>`;
+}
+
+/* Tab 2 的竖排列表共用同一套状态 */
+function trowActs(r){
+  if (r.dir==='in' && r.state==='todo'){
+    return `<div class="acts">
+      <button class="btn-respond" data-act="respond:${r.id}">回应</button>
+      ${!r.read?`<button class="btn-ghost" data-act="silence:${r.id}">知道了</button>`:''}
+    </div>`;
+  }
+  return '';
+}
+
+/* ======================= 各屏 ======================= */
+const sSplash = () => wrap(`
+  <div class="scroll splash" style="display:flex;padding:0">
+    ${logoSVG('logo')}
+    <h1 class="wm">惦</h1>
+    <p class="en">Mind</p>
+    <p class="sl">你在惦谁</p>
+    <p class="ver">1.0.0 · MVP</p>
+  </div>`, {});
+
+const sLogin = () => wrap(`
+  <div class="scroll" style="padding:16px 24px 40px">
+    <div style="text-align:center;margin:26px 0 30px">
+      <div style="width:52px;height:62px;margin:0 auto;color:var(--primary)">${logoMini()}</div>
+      <h1 style="font-family:var(--serif);font-size:30px;font-weight:600;margin:14px 0 4px;letter-spacing:.04em">惦</h1>
+      <p style="margin:0;font-size:12px;color:var(--ink-3);letter-spacing:.2em">你在惦谁</p>
+    </div>
+    <div class="field"><label>手机号</label><input value="138 0000 8888"></div>
+    <div class="field"><label>验证码</label><input placeholder="6 位数字"><button class="link" style="padding:0;white-space:nowrap">获取</button></div>
+    <p class="group-title" style="padding:20px 2px 0">我是……</p>
+    <div class="role-row">
+      <button class="role ${S.me==='husband'?'on':''}" data-act="role:husband"><b>老公</b><span>App 里称 TA 为「她」</span></button>
+      <button class="role ${S.me==='wife'?'on':''}" data-act="role:wife"><b>老婆</b><span>App 里称 TA 为「他」</span></button>
+    </div>
+    <button class="cta" data-act="go:bind">进入惦</button>
+    <p class="fine">只属于两个人的一条线<br>不聊天 · 不刷屏 · 没有已读不回</p>
+  </div>`, {});
+
+const sBind = () => wrap(`
+  <div class="scroll" style="padding:8px 22px 40px">
+    <button class="ghost-link back" data-act="go:login" style="margin-bottom:10px">${chevBack(13)} 返回</button>
+    <h1 style="font-size:24px;font-weight:600;margin:8px 0 6px;line-height:1.35">把 TA 拉进<br>这条线里</h1>
+    <p style="margin:0 0 22px;font-size:12.5px;color:var(--ink-3);line-height:1.7">一个人只能惦记一个人。<br>把你的码发给 TA，或者输入 TA 的。</p>
+    <div class="listcard" style="padding:6px 0 18px;text-align:center">
+      <p style="margin:16px 0 0;font-size:11.5px;color:var(--ink-3);letter-spacing:.1em">我的邀请码</p>
+      <div class="code">K7M2Q9</div>
+      <button class="chip solid" style="margin-top:6px">复制发给 TA</button>
+    </div>
+    <div class="divider">或者</div>
+    <div class="field"><input placeholder="输入 TA 的 6 位邀请码" style="text-align:center;letter-spacing:.2em"></div>
+    <button class="cta" data-act="go:chat">绑定</button>
+    <p class="fine">绑定后不能自行解绑<br>这条线一旦系上，就认真系</p>
+  </div>`, {});
+
+const sChat = () => {
+  const today = S.reminders.filter(r => !r.yesterday);
+  /* 戳一下不算惦记：分开数 */
+  const remindN = today.filter(r => r.type!=='poke').length;
+  const pokeN = today.filter(r => r.type==='poke').length;
+  const all = feedAll();
+  const list = all.slice(0, S.shown);
+  const more = all.length > list.length;
+  /* 按天分组：换天就插一条日期 */
+  let prevDay = '';
+  const body = list.map(r => {
+    const head = r.day !== prevDay ? `<p class="group-title">${r.day}</p>` : '';
+    prevDay = r.day;
+    return head + msgHTML(r);
+  }).join('');
+  return wrap(`
+    <div class="appbar">
+      <div><h1>互动</h1><p class="sub peekable" data-act="peeks">今天 · 互相惦记了 <b>${remindN}</b> 次<span class="peek-more" id="peekMore">，相互戳了 <b>${pokeN}</b> 次</span></p></div>
+      <span class="pill idle" style="margin-bottom:4px">10/21 周三</span>
+    </div>
+    <div class="scroll" id="feedScroll">
+      ${body}
+      <button class="feed-more" id="feedMore" data-act="feed:more">${more ? '上滑加载更早的' : '没有更早的了'}</button>
+    </div>
+    <button class="fab" data-act="compose:open">＋ 惦记 ${HER()}</button>`, {tab:'chat'});
+};
+
+/* 触底分页：每次多给 20 条，位置不动 */
+function loadMoreFeed(){
+  const all = feedAll();
+  if (S.loading || S.shown >= all.length) return;
+  S.loading = true;
+  const tip = document.getElementById('feedMore');
+  if (tip) tip.textContent = '加载更早的…';
+  const sc = document.getElementById('feedScroll');
+  const top = sc ? sc.scrollTop : 0;
+  setTimeout(()=>{
+    S.shown = Math.min(all.length, S.shown + S.size);
+    S.loading = false;
+    renderApp();
+    const sc2 = document.getElementById('feedScroll');
+    if (sc2){ sc2.scrollTop = top; bindFeedScroll(); }
+  }, 280);
+}
+function bindFeedScroll(){
+  if (S.tab !== 'chat') return;
+  const sc = document.getElementById('feedScroll');
+  if (!sc || sc.dataset.bound) return;
+  sc.dataset.bound = '1';
+  sc.addEventListener('scroll', ()=>{
+    if (sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 70) loadMoreFeed();
+  });
+}
+
+const sMind = (side, forceEmpty) => {
+  const sd = side || S.mindSide;
+  const isFrom = sd === 'from';
+  /* 惦 只装真正的惦记；戳一下只活在互动流里，不进这里 */
+  const only = (dir) => S.reminders.filter(r => r.dir===dir && !r.yesterday && r.type!=='poke');
+  const items = only(isFrom ? 'in' : 'out');
+  const empty = forceEmpty !== undefined ? forceEmpty : (isFrom && S.fromEmpty);
+  const count = empty ? 0 : items.length;
+  const heroText = isFrom
+    ? (count ? `${HER()}今天惦记了你 <b>${count}</b> 次` : `${HER()}今天还没惦记你哦`)
+    : (count ? `你今天惦记了 TA <b>${count}</b> 次` : `你今天还没惦记${HER()}呢`);
+
+  const rows = (!empty && items.length) ? items.map(r => {
+    const t = TYPES[r.type];
+    /* 她发来的一排：不写状态；我发出去的一排：行尾只写「未读 / 仅读」 */
+    const st = (!isFrom && r.state!=='done' && !r.yesterday)
+      ? `<span class="tstate ${r.read?'read':'unread'}">${r.read?'仅读':'未读'}</span>` : '';
+    return `<div class="trow ${isFrom?'in':'out'} ${(isFrom && r.state==='todo' && !r.read)?'pending':''} ${(r.reply||r.hasImage)?'bookmark':''} tap" data-act="detail:${r.id}" role="button">
+      <div class="tile ${t.tone}">${t.icon}</div>
+      <div>
+        <div class="head">
+          <span class="who">${labelOf(r)}</span>
+          <span class="time">${r.time}</span>
+        </div>
+        ${r.content ? `<p class="tiny">${r.content}</p>` : ''}
+        ${trowActs(r)}
+      </div>
+      ${st}
+    </div>`;
+  }).join('') : '';
+
+  return wrap(`
+    <div class="mind-head">
+      <div class="l">${logoMini()}<h1>惦</h1></div>
+    </div>
+    <div class="seg ${isFrom?'':'to'}">
+      <div class="pill"></div>
+      <button class="${isFrom?'on':''}" data-act="mind:from">From ${HER()}<b>${only('in').length}</b></button>
+      <button class="${isFrom?'':'on'}" data-act="mind:to">To ${HER()}<b>${only('out').length}</b></button>
+    </div>
+    <div class="scroll">
+      <div class="mind-hero">
+        ${threadSVG(count>0)}
+        <p class="hero-line">${heroText}</p>
+      </div>
+      ${empty ? `<div class="empty" style="padding-top:26px">
+          <p class="e-title">${isFrom?`${HER()}今天还没惦记你哦`:`你今天还没惦记${HER()}呢`}</p>
+          <p class="e-sub">${isFrom?'等一会儿就好，或者你先开口':'一条提醒只要三秒'}</p>
+          ${isFrom?'':`<button class="btn-primary" data-act="compose:open" style="padding:11px 22px">惦记 ${HER()} 一下</button>`}
+        </div>` : rows}
+    </div>
+    <button class="fab" data-act="compose:open">＋ 惦记 ${HER()}</button>`, {tab:'mind'});
+};
+
+/* 锁屏推送：两个回应入口直接放在通知上 */
+const sNotify = () => wrap(`
+  <div class="scroll lock" style="display:flex;flex-direction:column">
+    <div class="lt"><b>22:41</b><span>10 月 21 日 周三</span></div>
+    <div class="notif">
+      <div class="nh"><span class="app">惦</span><b>惦 · Mind</b><span class="t">现在</span></div>
+      <p class="nt">${HER()}惦记你了 · 喝水</p>
+      <p class="nb2">膀胱炎要记得喝水！</p>
+      <div class="nacts">
+        <button class="btn-ghost" data-act="silence:r1">知道了</button>
+        <button class="btn-respond" data-act="respond:r1">回应</button>
+      </div>
+    </div>
+    <p class="lock-hint">「知道了」只是让这条别响<br>它还留在列表顶部，直到你做了</p>
+  </div>`, {cls:'lockwrap'});
+
+
+const sStats = () => {
+  const dTotal = S.drink.logs.reduce((a,b)=>a+b.ml,0);
+  const dPct = Math.min(100, Math.round(dTotal / S.drink.target * 100));
+  const logs = S.drink.logs.map(l=>`${l.t} +${l.ml}ml`).join(' · ');
+  const mods = S.mods.map(m=>{
+    const pct = Math.min(100, Math.round(m.count / m.target * 100));
+    const done = m.count >= m.target;
+    const over = m.count - m.target;
+    const rec = (m.times||[]);
+    const recLine = rec.length
+      ? `今天 · ${rec.slice(0,4).join(' · ')}${rec.length>4?` 等 ${rec.length} 次`:''}`
+      : '今天还没记';
+    return `<div class="mod tone-${m.tone}">
+      <div class="mod-top">
+        <div class="tile ${m.tone}">${m.icon}</div>
+        <div><h3>${m.name}</h3><p class="hint">${m.hint||'自己加的'}</p></div>
+        <div class="val"><b>${m.count}</b><span>/${m.target} 次</span></div>
+        <button class="mod-x" data-act="delmod:${m.id}" title="删除">×</button>
+      </div>
+      <div class="bar"><i class="${m.tone}" style="width:${pct}%"></i></div>
+      <p class="logs ${rec.length?'':'quiet'}">${recLine}<button class="ghost-link rec-link" data-act="trend:${m.id}">趋势 ${chev(10)}</button></p>
+      <div class="mod-foot">
+        <span class="logs" style="margin:0">${done
+          ? `<b class="ok-tag">已完成</b>${over>0?` · 多做 ${over} 次`:''}`
+          : `还差 ${m.target-m.count} 次`}</span>
+        <button class="chip solid" data-act="mod:${m.id}">记一次</button>
+      </div>
+    </div>`;
+  }).join('');
+  return wrap(`
+    <div class="appbar">
+      <div><h1>日常</h1><p class="sub">今天 · 10 月 21 日</p></div>
+      <button class="icon-btn" data-act="go:settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3.1"/><path d="M12 3.2v2.1M12 18.7v2.1M4.9 7.8l1.8 1M17.3 15.2l1.8 1M4.9 16.2l1.8-1M17.3 8.8l1.8-1"/></svg></button>
+    </div>
+    <div class="scroll">
+      <div class="mod tone-drink">
+        <div class="mod-top">
+          <div class="tile drink">💧</div>
+          <div><h3>喝水</h3><p class="hint">今天 ${S.drink.logs.length} 次记录</p></div>
+          <div class="val"><b>${dTotal}</b><span>/${S.drink.target} ml</span></div>
+        </div>
+        <div class="bar"><i class="drink" style="width:${dPct}%"></i></div>
+        <div class="chips">
+          <button class="chip" data-act="drink:200">+200</button>
+          <button class="chip" data-act="drink:300">+300</button>
+          <button class="chip" data-act="drink:500">+500</button>
+          <button class="chip" data-act="drink:0">自定义</button>
+        </div>
+        <p class="logs">今天 · ${logs}<button class="ghost-link rec-link" data-act="trend:drink">趋势 ${chev(10)}</button></p>
+        <div class="mod-foot"><span class="logs" style="margin:0">达标进度 ${dPct}%</span></div>
+      </div>
+
+      ${mods}
+
+      <button class="addmod" data-act="addmod">＋ 添加模块</button>
+      <p class="stats-foot">只有喝水记水量，其余只记次数<br>满了算完成，想继续打卡也可以</p>
+    </div>`, {tab:'stats'});
+};
+
+const sTrend = (id) => {
+  /* 每个模块只有这一个历史入口：7 天柱状 + 今天的每一条，交互完全一致 */
+  const isDrink = (id || 'drink') === 'drink';
+  const m = isDrink ? null : modOf(id);
+  if (!isDrink && !m) return sTrend('drink');
+  const name = isDrink ? '喝水' : m.name;
+  const icon = isDrink ? '💧' : m.icon;
+  const tone = isDrink ? 'drink' : m.tone;
+  const target = isDrink ? S.drink.target : m.target;
+  const todayVal = isDrink ? S.drink.logs.reduce((a,b)=>a+b.ml,0) : m.count;
+  const week = [...(isDrink ? S.drink.week : (m.week||[])), todayVal];
+  const labels = ['15','16','17','18','19','20','今'];
+  const maxV = Math.max(1, ...week, target);
+  const fmt = (v) => isDrink ? `${(v/1000).toFixed(2).replace(/0$/,'').replace(/\.$/,'.0')} L` : `${v} 次`;
+  const fmtShort = (v) => isDrink ? (v >= 1000 ? (v/1000).toFixed(1).replace(/\.0$/,'')+'L' : v) : v;
+  /* 目标线：自柱底往上，避开日期标签 */
+  const targetBottom = Math.round(22 + (target / maxV) * 96);
+  const bars = week.map((v,i)=>{
+    const last = i===week.length-1;
+    const ok = v >= target;
+    return `<div class="col ${last?'today':''} ${ok&&!last?'ok':''}">
+      <span class="bv">${v?fmtShort(v):''}</span>
+      <div class="b" style="height:${Math.max(6, Math.round(v/maxV*100))}%"></div>
+      <span class="lb">${labels[i]}</span>
+    </div>`;
+  }).join('');
+  const okDays = week.filter(v=>v>=target).length;
+  const avg = week.reduce((a,b)=>a+b,0) / week.length;
+  const ma = week.indexOf(Math.max(...week)), mi = week.indexOf(Math.min(...week));
+  const recRows = isDrink
+    ? S.drink.logs.map(l=>`<div class="rec-row"><span class="t">${l.t}</span><span class="d">饮水</span><b class="v">+${l.ml} ml</b></div>`).join('')
+    : (m.times||[]).map((t,i)=>`<div class="rec-row"><span class="t">${t}</span><span class="d">第 ${m.times.length - i} 次</span><b class="v">✓</b></div>`).join('');
+  return wrap(`
+    <div class="appbar nav">
+      <button class="ghost-link back" data-act="tab:stats">${chevBack(14)} 返回</button>
+      <h1>${name}趋势</h1>
+    </div>
+    <div class="scroll">
+      <div class="seg" style="margin:0 4px 14px"><div class="pill"></div>
+        <button class="on">近 7 天</button><button>近 30 天</button>
+      </div>
+      <div class="mod tone-${tone}">
+        <div class="trend-head">
+          <div class="mod-top" style="margin:0;gap:10px">
+            <div class="tile ${tone}">${icon}</div>
+            <div><h3>最近 7 天</h3><p class="hint">目标 ${target}${isDrink?' ml':' 次'}</p></div>
+          </div>
+          <div class="meta">达标 <b>${okDays}</b>/7 · 日均 <b>${isDrink ? fmt(Math.round(avg)) : avg.toFixed(1)}</b></div>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-target" style="bottom:${targetBottom}px"><span>目标</span></div>
+          <div class="chart">${bars}</div>
+        </div>
+      </div>
+      <div class="trend-sum">
+        <div class="cell"><p class="k">最多的一天</p><p class="v">${fmt(week[ma])} · ${labels[ma]==='今'?'今天':labels[ma]+'日'}</p></div>
+        <div class="cell"><p class="k">最少的一天</p><p class="v">${fmt(week[mi])} · ${labels[mi]==='今'?'今天':labels[mi]+'日'}</p></div>
+      </div>
+      <div class="mod tone-${tone}" style="padding:14px 16px">
+        <p class="group-title" style="padding:0 0 4px">今天的每一条</p>
+        <div class="rec-list">${recRows || `<p class="logs quiet" style="margin:6px 2px 0">今天还没记</p>`}</div>
+        <p class="logs" style="margin:8px 2px 0">今天 ${isDrink?`${S.drink.logs.length} 次 · ${todayVal} ml`:`${todayVal} 次`}　目标 ${target}${isDrink?' ml':' 次'}</p>
+      </div>
+      <p class="fine">趋势页只读，不在这里发提醒</p>
+    </div>`, {});
+};
+
+const sSettings = () => wrap(`
+  <div class="appbar nav">
+    <button class="ghost-link back" data-act="tab:stats">${chevBack(14)} 返回</button>
+    <h1>设置</h1>
+  </div>
+  <div class="scroll">
+    <p class="group-title" style="padding-left:4px">每日目标</p>
+    <div class="listcard">
+      <div class="row"><span class="k">喝水</span><span class="v"><b>2000</b> ml</span>${chev(12)}</div>
+      <div class="row"><span class="k">起身站立</span><span class="v"><b>6</b> 次</span>${chev(12)}</div>
+      <div class="row"><span class="k">提肛</span><span class="v"><b>3</b> 次</span>${chev(12)}</div>
+    </div>
+    <p class="group-title" style="padding-left:4px">账号</p>
+    <div class="listcard">
+      <div class="row"><span class="k">手机号</span><span class="v">138****8888</span></div>
+      <div class="row"><span class="k">我是</span><span class="v">老公</span></div>
+      <div class="row"><span class="k">已绑定</span><span class="v">${HER()} · 2026-10-18</span></div>
+    </div>
+    <p class="group-title" style="padding-left:4px">关于</p>
+    <div class="listcard">
+      <div class="row"><span class="k">惦 · Mind</span><span class="v">1.0.0（MVP）</span></div>
+      <div class="row"><span class="k">推送</span><span class="v">小米推送 · 已开启</span></div>
+    </div>
+    <button class="btn-ghost" style="width:100%;margin-top:8px;color:#E2543F;border-color:rgba(226,84,63,.28)">退出登录</button>
+  </div>`, {});
+
+/* 详情弹层：互动页与惦页的卡片点开效果共用这一份 */
+function sheetDetailHTML(id){
+  const r = findMsg(id); if(!r) return '';
+  const t = TYPES[r.type];
+  const dir = r.dir==='in' ? `${HER()}发给你的` : `你发给${HER()}的`;
+  let body = '';
+  if (r.content) body += `<div class="dcontent">${r.content}</div>`;
+  if (r.reply || r.hasImage){
+    body += `<div class="reply">
+      ${r.reply ? `<p class="say">“${r.reply}”</p>` : ''}
+      ${r.hasImage ? `<div class="thumb">📷</div>` : ''}
+    </div>`;
+  }
+  if (r.state==='done' && r.type==='drink' && r.amount) body += `<p class="note" style="text-align:left">记了 ${r.amount}ml</p>`;
+  if (r.state==='done' && r.type==='stand' && r.count) body += `<p class="note" style="text-align:left">起身 ${r.count} 次</p>`;
+  if (r.state==='done' && r.type==='kegel' && r.count) body += `<p class="note" style="text-align:left">做了 ${r.count} 组</p>`;
+  const actable = r.dir==='in' && r.state==='todo' && !r.yesterday;
+  /* 卡片外面不写字，点开才看状态：未读 / 仅读 / 已回应 */
+  const dst = r.state==='done' ? '已回应' : (r.read ? '仅读' : '未读');
+  const dcls = r.state==='done' ? 'done' : (r.read ? 'read' : 'unread');
+  /* 戳不点开，详情里不出现回戳 */
+  return `<div class="scrim" data-act="sheet:close"></div>
+  <div class="sheet">
+    <div class="handle"></div>
+    <h2>${t.icon} ${labelOf(r)}</h2>
+    <p class="s-sub">${dir} · ${r.time}<span class="dstate ${dcls}">${dst}</span></p>
+    ${body}
+    ${actable ? `<div class="acts" style="margin-top:16px">
+        <button class="btn-respond" style="flex:1" data-act="respond:${r.id}">回应</button>
+        ${!r.read?`<button class="btn-ghost" data-act="silence:${r.id}">知道了</button>`:''}
+      </div>` : ''}
+  </div>`;
+}
+
+/* 自定义模块：一个名字 + 每天几次，够了 */
+function sheetAddModHTML(){
+  const n = S.newMod;
+  return `<div class="scrim" data-act="sheet:close"></div>
+  <div class="sheet">
+    <div class="handle"></div>
+    <h2>添加模块</h2>
+    <p class="s-sub">取个名字，定个次数，就这么多</p>
+    <div class="inputbox"><input id="nmname" maxlength="8" placeholder="比如：读书 10 页" value="${n.name||''}"></div>
+    <div class="chips" style="margin-top:16px">
+      ${[1,2,3,5,8].map(v=>`<button class="chip ${n.target===v?'solid':''}" data-act="nmtarget:${v}">每天 ${v} 次</button>`).join('')}
+    </div>
+    <button class="btn-primary btn-wide" data-act="newmod">添加</button>
+    <p class="note">满了会标成「已完成」，想继续打卡也随时可以</p>
+  </div>`;
+}
+
+
+/* ======================= 弹层 ======================= */
+function sheetComposeHTML(){
+  const c = S.compose;
+  const typeBtns = Object.keys(TYPES).map(k=>`<button class="${c.type===k?'on':''}" data-act="ctype:${k}"><i>${TYPES[k].icon}</i>${TYPES[k].label}</button>`).join('');
+  let body = '';
+  if (c.type === 'custom'){
+    body = `<div class="inputbox">
+      <input id="ctitle" maxlength="15" placeholder="惦记 ${HER()} 的一句话…（≤15字）" value="${c.title||''}">
+      <span class="cnt" id="ccnt">${(c.title||'').length}/15</span>
+    </div>`;
+  } else if (c.type === 'drink' || c.type === 'stand' || c.type === 'kegel'){
+    body = `<div class="inputbox">
+      <input id="ctext" placeholder="${c.type==='drink'?'想说的是……（可选）':'想说的是……（可选）'}" value="${c.text||''}">
+    </div>
+    <div class="sugg">
+      ${(c.type==='drink'?['喝口温水呀','该补水了','杯子里还有吗']
+        : c.type==='stand'?['起来走两步','别又坐一上午','拉伸一下']
+        : ['顺手做一组','坐着也能做','来三组？'])
+        .map(s=>`<button class="chip" data-act="ctext:${s}">${s}</button>`).join('')}
+    </div>`;
+  } else {
+    body = `<p class="note" style="text-align:left;margin-top:14px">戳一下不带话。<br>${HER()}看到手机震了一下，就知道你在想${HER()}。</p>`;
+  }
+  return `<div class="scrim" data-act="sheet:close"></div>
+  <div class="sheet">
+    <div class="handle"></div>
+    <h2>惦记 ${HER()}</h2>
+    <p class="s-sub">一次点击，TA 的手机会立刻响一下</p>
+    <div class="types">${typeBtns}</div>
+    ${body}
+    <button class="btn-primary btn-wide" data-act="send">发送</button>
+    <p class="note">只提醒这一次，不会自动重复</p>
+  </div>`;
+}
+
+function sheetRespondHTML(id){
+  const r = findMsg(id) || S.reminders[0];
+  const t = TYPES[r.type];
+  const R = S.respond;
+  let body = '';
+  if (r.type === 'drink'){
+    body = `<div class="chips" style="margin-top:16px">
+      ${[200,300,500].map(v=>`<button class="chip ${R.amount===v?'solid':''}" data-act="amount:${v}">${v} ml</button>`).join('')}
+      <button class="chip ${[200,300,500].indexOf(R.amount)<0?'solid':''}" data-act="amount:0">自定义</button>
+    </div>`;
+  } else if (r.type === 'stand'){
+    body = `<div class="chips" style="margin-top:16px">
+      <button class="chip solid" data-act="noop">起身 1 次</button>
+      <button class="chip" data-act="noop">记 5 分钟</button>
+    </div>`;
+  } else if (r.type === 'kegel'){
+    body = `<div class="chips" style="margin-top:16px">
+      <button class="chip solid" data-act="noop">做 1 组</button>
+      <button class="chip" data-act="noop">做 3 组</button>
+    </div>`;
+  }
+  return `<div class="scrim" data-act="sheet:close"></div>
+  <div class="sheet">
+    <div class="handle"></div>
+    <h2>回应</h2>
+    <p class="s-sub">${t.icon} ${labelOf(r)} · ${r.time}${r.content?' · '+r.content:''}</p>
+    ${body}
+    <div class="inputbox"><textarea id="rreply" rows="2" placeholder="附一句？（可选）">${R.reply||''}</textarea></div>
+    <div class="imgadd">＋ 加一张图（可选，单张）</div>
+    <button class="btn-respond btn-wide" data-act="confirm:${r.id}">回应</button>
+    <p class="note">确认后 TA 会收到回执，这一条就完成了</p>
+  </div>`;
+}
+
+/* ======================= 渲染 ======================= */
+const appRoot = document.getElementById('appRoot');
+const sheetRoot = document.getElementById('sheetRoot');
+const toastRoot = document.getElementById('toastRoot');
+
+function renderApp(){
+  const map = {
+    chat:()=>sChat(),
+    mind:()=>sMind(),
+    stats:()=>sStats(),
+    splash:()=>sSplash(),
+    login:()=>sLogin(),
+    bind:()=>sBind(),
+    trend:()=>sTrend(S.trendId),
+    notify:()=>sNotify(),
+    settings:()=>sSettings()
+  };
+  /* 互动流可能已经翻到很下面：重渲染时把滚动位置留住 */
+  const prevTab = S.tab;
+  const prevFeed = document.getElementById('feedScroll');
+  const prevTop = prevFeed ? prevFeed.scrollTop : 0;
+  appRoot.innerHTML = (map[S.tab]||sChat)();
+  bindFeedScroll();
+  const feed = document.getElementById('feedScroll');
+  if (feed && prevFeed && prevTab === S.tab) feed.scrollTop = prevTop;
+  renderSheet();
+}
+function renderSheet(){
+  if (!S.sheet){ sheetRoot.innerHTML=''; return; }
+  if (S.sheet.kind === 'compose') sheetRoot.innerHTML = sheetComposeHTML();
+  else if (S.sheet.kind === 'addmod') sheetRoot.innerHTML = sheetAddModHTML();
+  else if (S.sheet.kind === 'detail') sheetRoot.innerHTML = sheetDetailHTML(S.sheet.id);
+  else sheetRoot.innerHTML = sheetRespondHTML(S.sheet.id);
+}
+let peekTimer = null;
+function toast(msg){
+  toastRoot.innerHTML = `<div class="toast">${msg}</div>`;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>{ toastRoot.innerHTML=''; }, 1900);
+}
+
+/* ======================= 交互 ======================= */
+document.getElementById('device').addEventListener('click', (e)=>{
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.getAttribute('data-act');
+  const [k, v] = act.split(':');
+
+  if (k === 'tab'){ S.tab = v; S.sheet=null; renderApp(); return; }
+  if (k === 'mind'){ S.mindSide = v; renderApp(); return; }
+  if (k === 'go'){ S.tab = v; S.sheet=null; renderApp(); return; }
+  if (k === 'role'){ S.me = v; syncRoleSwitch(); renderApp(); return; }
+  /* 点开详情 = 看过了：未读点变成「仅读」，不重渲染列表，关掉弹层时自然更新 */
+  if (k === 'detail'){
+    const r = findMsg(v);
+    if (r && r.dir === 'in') r.read = true;
+    S.sheet={kind:'detail', id:v}; renderSheet(); return;
+  }
+  if (k === 'feed'){ loadMoreFeed(); return; }
+  if (k === 'peeks'){
+    const el = document.getElementById('peekMore');
+    if (!el) return;
+    el.classList.add('show');
+    clearTimeout(peekTimer);
+    peekTimer = setTimeout(()=>el.classList.remove('show'), 3000);
+    return;
+  }
+  if (k === 'poke'){
+    S.reminders.unshift({id:'n'+Date.now(), dir:'out', type:'poke', content:'',
+      time:'刚刚', min:0, state:'done', read:true});
+    renderApp(); renderSheet();
+    toast('戳回去了 · 她手机响了一下');
+    return;
+  }
+  /* 知道了：只停声音和震动，不标记做没做 */
+  if (k === 'silence'){
+    const r = findMsg(v); if(!r) return;
+    r.read = true; r.silenced = true;
+    renderApp(); toast('知道了 · 不响了，但还留着'); return;
+  }
+  if (k === 'respond'){ S.sheet={kind:'respond', id:v}; S.respond={id:v, amount:300, count:1, reply:''}; renderSheet(); return; }
+  if (k === 'compose'){ S.sheet={kind:'compose'}; renderSheet(); return; }
+  if (k === 'sheet'){ S.sheet=null; renderSheet(); renderApp(); return; }
+  if (k === 'ctype'){ S.compose.type=v; renderSheet(); setTimeout(()=>{const i=document.getElementById('ctitle'); if(i) i.focus();},30); return; }
+  if (k === 'ctext'){ S.compose.text=v; renderSheet(); return; }
+  if (k === 'amount'){ S.respond.amount = v; renderSheet(); return; }
+  if (k === 'send'){
+    const c = S.compose;
+    const item = {
+      id:'n'+Date.now(), dir:'out', type:c.type,
+      title: c.type==='custom' ? (c.title||'一句话') : '',
+      content: c.type==='poke' ? '' : (c.text||''),
+      time:'刚刚', min:0, state:'todo', read:false
+    };
+    if (c.type==='custom' && !c.title){ toast('先写一句惦记的话'); return; }
+    S.reminders.unshift(item);
+    S.compose = {type:'drink', text:'', title:''};
+    if (S.tab === 'mind') S.mindSide = 'to';
+    S.sheet=null; renderApp();
+    toast('已发给 '+HER()+' · 一次就好');
+    return;
+  }
+  if (k === 'confirm'){
+    const r = findMsg(v); if(!r) return;
+    r.state='done'; r.read=true; r.silenced=false;
+    if (r.type==='drink'){
+      const ml = S.respond.amount || 250;
+      r.amount = ml;
+      S.drink.logs.unshift({t:nowHM(), ml});
+    }
+    if (r.type==='stand'){ r.count = 1; bumpMod('stand'); }
+    if (r.type==='kegel'){ r.count = 1; bumpMod('kegel'); }
+    if (S.respond.reply){ r.reply = S.respond.reply; }
+    S.sheet=null; renderApp();
+    toast('已回应 · 心同频了一下');
+    return;
+  }
+  if (k === 'drink'){
+    const n = parseInt(v,10) || 250;
+    S.drink.logs.unshift({t:nowHM(), ml:n}); renderApp(); toast('已记 '+n+'ml'); return;
+  }
+  if (k === 'stand'){ bumpMod('stand'); renderApp(); toast('起身 · 记了一次'); return; }
+  if (k === 'mod'){
+    const m = bumpMod(v); if (!m) return;
+    renderApp(); renderSheet();
+    toast(m.count === m.target ? `${m.name} · 今天完成了` : `${m.name} · 记了一次`);
+    return;
+  }
+  /* 每个模块共用一个历史趋势页 */
+  if (k === 'trend'){ S.trendId = v; S.tab = 'trend'; S.sheet = null; renderApp(); return; }
+  if (k === 'delmod'){
+    S.mods = S.mods.filter(x => x.id !== v);
+    renderApp(); toast('这个模块已移除'); return;
+  }
+  if (k === 'addmod'){
+    S.newMod = {name:'', target:3};
+    S.sheet = {kind:'addmod'}; renderSheet(); return;
+  }
+  if (k === 'nmtarget'){
+    S.newMod.target = parseInt(v,10) || 1; renderSheet(); return;
+  }
+  if (k === 'newmod'){
+    const nm = (S.newMod.name||'').trim();
+    if (!nm){ toast('先给模块起个名字'); return; }
+    S.mods.push({id:'m'+Date.now(), name:nm, icon:'✅', tone:'custom',
+      target:S.newMod.target, count:0, times:[], week:[0,0,0,0,0,0], hint:'自己加的'});
+    S.sheet=null; renderApp(); toast('模块已添加');
+    return;
+  }
+});
+
+/* 输入不重渲染，只更新状态 */
+document.getElementById('device').addEventListener('input', (e)=>{
+  const t = e.target;
+  if (t.id === 'nmname'){ S.newMod.name = t.value; return; }
+  if (t.id === 'ctitle'){
+    S.compose.title = t.value;
+    const c = document.getElementById('ccnt'); if (c) c.textContent = t.value.length + '/15';
+  }
+  if (t.id === 'ctext') S.compose.text = t.value;
+  if (t.id === 'rreply') S.respond.reply = t.value;
+});
+
+/* ======================= 顶部控制 ======================= */
+document.getElementById('viewSwitch').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#viewSwitch button').forEach(x=>x.classList.toggle('on', x===b));
+  const v = b.dataset.view;
+  document.getElementById('view-single').classList.toggle('on', v==='single');
+  document.getElementById('view-board').classList.toggle('on', v==='board');
+  if (v==='board') buildBoard();
+});
+document.getElementById('roleSwitch').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  S.me = b.dataset.role; syncRoleSwitch(); renderApp();
+});
+function syncRoleSwitch(){
+  document.querySelectorAll('#roleSwitch button').forEach(x=>x.classList.toggle('on', x.dataset.role===S.me));
+}
+document.getElementById('emptySwitch').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#emptySwitch button').forEach(x=>x.classList.toggle('on', x===b));
+  S.fromEmpty = b.dataset.empty === '1';
+  if (S.tab==='mind') renderApp();
+});
+
+/* ======================= 设计板 ======================= */
+function buildBoard(){
+  const root = document.getElementById('boardRoot');
+  if (root.dataset.done) return;
+  const pendingId = (S.reminders.find(r=>r.dir==='in' && r.state==='todo')||S.reminders[0]).id;
+  const items = [
+    {t:'01 启动页', s:'树干生长 · 双心挂上枝头', h:sSplash()},
+    {t:'02 登录', s:'手机号 + 角色二选一', h:sLogin()},
+    {t:'03 绑定', s:'6 位邀请码，一对一', h:sBind()},
+    {t:'04 互动（Tab 1）', s:'左右分边、无头像；未读靠旁边的点，默认 20 条触底加载', h:sChat()},
+    {t:'05 卡片详情', s:'互动 / 惦 两页共用一个点开效果', h:sChat()+sheetDetailHTML('r5')},
+    {t:'06 惦 · From 她（Tab 2）', s:'当天 TA 对你的惦记 + 红点', h:sMind('from')},
+    {t:'07 惦 · To 她', s:'你发出去的，等回执', h:sMind('to')},
+    {t:'08 空态', s:'她还没惦记你', h:sMind('from', true)},
+    {t:'09 锁屏通知', s:'回应 / 知道了，两个入口', h:sNotify()},
+    {t:'10 发送提醒', s:'喝水 / 起身 / 提肛 / 惦记 / 戳一下，一屏选完', h:sMind('from')+sheetComposeHTML()},
+    {t:'11 回应', s:'水量 / 附言 / 单图，回执挂在原卡片下', h:sMind('from')+sheetRespondHTML(pendingId)},
+    {t:'12 日常（Tab 3）', s:'只有喝水记水量；其余记次数，每张卡一个「趋势」入口', h:sStats()},
+    {t:'13 模块趋势', s:'和喝水同一个入口：7 天柱状 + 今天每一条', h:sTrend('stand')},
+    {t:'14 喝水趋势', s:'点卡片上的「趋势」进来，一页看全', h:sTrend('drink')},
+    {t:'15 设置', s:'每日目标 / 账号 / 关于', h:sSettings()}
+  ];
+  root.innerHTML = items.map(it=>`<div class="bi">
+      <div class="frame"><div class="device"><div class="punch"></div><div class="app">${it.h}</div></div></div>
+      <p class="cap">${it.t}<span>${it.s}</span></p>
+    </div>`).join('');
+  root.dataset.done = '1';
+
+  const lr = document.getElementById('logoRow');
+  if (lr) lr.innerHTML = `
+    <div class="l">${logoMini()}<p>A 极简线条</p></div>
+    <div class="l">${logoMini()}<p>B 树形双心</p></div>
+    <div class="l"><svg viewBox="0 0 40 46" fill="none" style="color:#FF6B5B"><path d="M20 42s-13-8.4-13-17.2A7.4 7.4 0 0 1 20 20a7.4 7.4 0 0 1 13 4.8C33 33.6 20 42 20 42z" stroke="currentColor" stroke-width="2.2"/><path d="M20 12v26" stroke="#FF6B5B" stroke-width="2.2" stroke-linecap="round"/></svg><p>C 负空间心形</p></div>
+    <div class="l" style="position:relative"><span style="position:absolute;inset:0;display:grid;place-items:center;font-family:var(--serif);font-size:34px;color:rgba(255,107,91,.16);padding-bottom:8px">惦</span>${logoMini()}<p>D 叠「惦」字</p></div>`;
+}
+
+/* ======================= 启动 ======================= */
+renderApp();
+buildBoard();
+if (location.hash === '#board'){
+  document.querySelector('#viewSwitch button[data-view="board"]').click();
+} else if (location.hash.startsWith('#tab:')){
+  S.tab = location.hash.slice(5);
+  renderApp();
+} else if (location.hash.startsWith('#detail:')){
+  S.tab = 'chat';
+  S.sheet = {kind:'detail', id: location.hash.slice(8)};
+  renderApp();
+}
+</script>
+</body>
+</html>
